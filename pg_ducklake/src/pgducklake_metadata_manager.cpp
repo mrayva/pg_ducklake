@@ -136,6 +136,11 @@ SPIExecuteInSubtransaction(const duckdb::string &query, bool &had_error, duckdb:
 	/* DuckLake-generated SQL calls DuckDB-dialect functions (month(), murmur3_32(), ...) unqualified;
 	 * resolve them to the ducklake-schema UDFs deterministically, independent of the caller's search_path. */
 	::set_config_option("search_path", "ducklake", PGC_USERSET, PGC_S_SESSION, GUC_ACTION_SAVE, true, 0, false);
+	/* Metadata queries must run natively in PostgreSQL: with duckdb.force_execution on, pg_duckdb would
+	 * send these SELECTs to DuckDB, which cannot run them (SAVEPOINT/subtransactions) or recurse into
+	 * the catalog being attached. */
+	::set_config_option("duckdb.force_execution", "false", PGC_USERSET, PGC_S_SESSION, GUC_ACTION_SAVE, true, 0,
+	                    false);
 
 	SetAllowSubtransaction(true);
 	BeginInternalSubTransaction(NULL);
