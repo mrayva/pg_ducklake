@@ -18,6 +18,10 @@ extern "C" {
 
 #include "commands/extension.h"
 #include "fmgr.h"
+#include "miscadmin.h"
+#include "nodes/pg_list.h"
+#include "utils/guc.h"
+#include "utils/varlena.h"
 }
 
 namespace pgducklake {
@@ -50,8 +54,49 @@ PG_MODULE_MAGIC_EXT(.name = "pg_ducklake", .version = PG_DUCKLAKE_VERSION);
 PG_MODULE_MAGIC;
 #endif
 
+/*
+ * Our planner hook only runs ahead of pg_duckdb's if it is installed after it (hooks chain LIFO).
+ * With the opposite shared_preload_libraries order, pg_duckdb's hook runs first and, under
+ * duckdb.force_execution, plans a query that mentions a DuckLake table itself, through its own
+ * copy of the name resolution that knows nothing about the DuckLake catalog: the table is read as
+ * its empty PostgreSQL placeholder and the query silently returns no rows. Load pg_duckdb first
+ * whenever it is preloaded, so the order of the list no longer matters.
+ */
+static void
+LoadPgDuckdbBeforeHooks() {
+	if (!process_shared_preload_libraries_in_progress)
+		return;
+	const char *preload = GetConfigOption("shared_preload_libraries", true, false);
+	if (!preload || !*preload)
+		return;
+
+	char *raw = pstrdup(preload);
+	List *elems = NIL;
+	if (!SplitDirectoriesString(raw, ',', &elems)) {
+		pfree(raw);
+		return;
+	}
+	bool listed = false;
+	ListCell *lc;
+	foreach (lc, elems) {
+		const char *name = (const char *)lfirst(lc);
+		const char *slash = strrchr(name, '/');
+		if (slash)
+			name = slash + 1;
+		if (strcmp(name, "pg_duckdb") == 0 || strcmp(name, "pg_duckdb.so") == 0) {
+			listed = true;
+			break;
+		}
+	}
+	list_free_deep(elems);
+	pfree(raw);
+	if (listed)
+		load_file("pg_duckdb", false);
+}
+
 void
 _PG_init(void) {
+	LoadPgDuckdbBeforeHooks();
 	// Register metadata manager factory in DuckLake's process-global registry.
 	duckdb::DuckLakeMetadataManager::Register(PGDUCKLAKE_DUCKDB_CATALOG, pgducklake::PgDuckLakeMetadataManager::Create);
 	pgducklake::InitGUCs();
