@@ -72,12 +72,10 @@ namespace pgducklake {
  * (SUBXACT_EVENT_START_SUB guard; e.g. DuckLake FlushChanges retry loop). */
 void SetAllowSubtransaction(bool allow);
 
-/* Pin this process's DuckDB instance to one thread, ignoring ducklake.threads, so
- * DuckDB never schedules a task (including the metadata manager's Postgres SPI
- * calls) on any thread but the one Postgres itself created. Called from _PG_init
- * for every process that loads this library, and redundantly from the
- * maintenance worker's own entry point; must run before the instance
- * initializes. */
+/* Pin this process's DuckDB instance to one thread, ignoring ducklake.threads.
+ * Called by the maintenance worker; must run before the instance initializes.
+ * Client backends are single-threaded by default through ducklake.threads = 1
+ * (see its description in guc.cpp for why). */
 void ForceSingleThreadedDuckDB();
 
 /* Set per-statement in the planner hook: force a DuckDB transaction for queries
