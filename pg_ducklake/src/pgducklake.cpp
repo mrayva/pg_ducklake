@@ -54,19 +54,6 @@ void
 _PG_init(void) {
 	// Register metadata manager factory in DuckLake's process-global registry.
 	duckdb::DuckLakeMetadataManager::Register(PGDUCKLAKE_DUCKDB_CATALOG, pgducklake::PgDuckLakeMetadataManager::Create);
-	/* Metadata-manager SPI calls (pgducklake_metadata_manager.cpp) run on whatever
-	 * thread DuckDB schedules the originating statement on; DuckDB may hand any
-	 * query, not just postgres scans, to one of its own task threads. A pgrx
-	 * extension's hook firing on such a thread (vchord, pg_parquet, pg_ripple
-	 * observed; others are unaudited) aborts the whole backend, since pgrx asserts
-	 * every Postgres FFI call happens on the thread Postgres itself created. Force
-	 * single-threaded DuckDB in every process that loads this library -- not just
-	 * the maintenance worker, which already did this in its own entry point below
-	 * -- so no DuckDB task thread, anywhere, ever calls back into Postgres. This
-	 * must run before the first DuckDBManager::Get(), i.e. here in _PG_init, not
-	 * later in a GUC or function handler.
-	 */
-	pgducklake::ForceSingleThreadedDuckDB();
 	pgducklake::InitGUCs();
 	pgducklake::InitMaintenanceWorker();
 	pgducklake::InitDirectInsertStatsShmem();
