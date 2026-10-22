@@ -342,3 +342,32 @@ BEGIN
     END IF;
 END
 $$;
+
+-- add_data_files: register existing Parquet files in a table's catalog without copying them.
+-- passthrough
+CREATE FUNCTION ducklake.add_data_files(schema_name text, table_name text, files text)
+RETURNS SETOF ducklake.row
+SET search_path = pg_catalog, pg_temp
+AS 'MODULE_PATHNAME', 'ducklake_only_function'
+LANGUAGE C;
+
+-- passthrough
+CREATE FUNCTION ducklake.add_data_files(schema_name text, table_name text, files text[])
+RETURNS SETOF ducklake.row
+SET search_path = pg_catalog, pg_temp
+AS 'MODULE_PATHNAME', 'ducklake_only_function'
+LANGUAGE C;
+
+-- rewrite -> add_data_files(text, text, text)
+CREATE FUNCTION ducklake.add_data_files(scope regclass, files text)
+RETURNS SETOF ducklake.row
+SET search_path = pg_catalog, pg_temp
+AS 'MODULE_PATHNAME', 'ducklake_function_mapping'
+LANGUAGE C;
+
+-- rewrite -> add_data_files(text, text, text[])
+CREATE FUNCTION ducklake.add_data_files(scope regclass, files text[])
+RETURNS SETOF ducklake.row
+SET search_path = pg_catalog, pg_temp
+AS 'MODULE_PATHNAME', 'ducklake_function_mapping'
+LANGUAGE C;

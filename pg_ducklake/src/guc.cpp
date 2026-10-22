@@ -10,6 +10,7 @@ extern "C" {
 namespace pgducklake {
 
 char *default_table_path = strdup("");
+bool require_table_path = false;
 char *azure_transport_option_type = strdup("");
 double vacuum_delete_threshold = 0.1;
 bool enable_direct_insert = true;
@@ -56,6 +57,12 @@ InitGUCs() {
 	                           "Default directory path for DuckLake tables. If set, tables will be "
 	                           "created under this path.",
 	                           NULL, &default_table_path, "", PGC_USERSET, 0, NULL, NULL, NULL);
+
+	DefineCustomBoolVariable("ducklake.require_table_path",
+	                         "Refuse to create a DuckLake table that has no data path of its own "
+	                         "(neither ducklake.default_table_path nor WITH (ducklake.table_path)), "
+	                         "instead of silently storing its Parquet files inside the PostgreSQL data directory.",
+	                         NULL, &require_table_path, false, PGC_SUSET, 0, NULL, NULL, NULL);
 
 	DefineCustomStringVariable("ducklake.azure_transport_option_type",
 	                           "Set the azure_transport_option_type for DuckDB Azure extension. Can be used to "

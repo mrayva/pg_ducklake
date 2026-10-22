@@ -614,6 +614,15 @@ DECLARE_PG_FUNCTION(ducklake_create_table_trigger) {
 	}
 
 	pgducklake::PendingCreateOptions pending = pgducklake::TakePendingCreateOptions();
+	if (pgducklake::require_table_path && !pending.has_table_path &&
+	    (!pgducklake::default_table_path || pgducklake::default_table_path[0] == '\0')) {
+		ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
+		                errmsg("DuckLake table has no data path and ducklake.require_table_path is on"),
+		                errdetail("Without a path, its Parquet files would be stored inside the PostgreSQL data "
+		                          "directory."),
+		                errhint("SET ducklake.default_table_path to a directory or bucket with room, or create the "
+		                        "table WITH (ducklake.table_path = '...').")));
+	}
 	{
 		// The WITH (ducklake.table_path) override wins for this CREATE; the guard
 		// clears it (on success or error) before the CTAS INSERT runs below.

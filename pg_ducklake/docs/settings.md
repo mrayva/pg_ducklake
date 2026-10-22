@@ -77,6 +77,13 @@ Default directory path for DuckLake tables. If set, tables will be created under
 - **Default**: `""` (empty -- uses local storage)
 - **Access**: Per-session
 
+### `ducklake.require_table_path`
+
+When on, creating a DuckLake table that has no data path of its own (neither [`ducklake.default_table_path`](#ducklakedefault_table_path) nor `WITH (ducklake.table_path = ...)`) is an error, instead of silently storing its Parquet files inside the PostgreSQL data directory. Existing tables are not affected.
+
+- **Default**: `off`
+- **Access**: Superuser-only
+
 ### `ducklake.maintenance_enabled`
 
 Enable the background maintenance worker. When enabled, a launcher process periodically spawns workers that run the full maintenance pipeline (flush inlined data, rewrite data files, merge adjacent files, expire snapshots, cleanup old files) on every database with pg_ducklake installed.

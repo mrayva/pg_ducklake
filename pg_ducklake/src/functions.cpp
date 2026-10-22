@@ -120,6 +120,10 @@ static const DefaultTableMacro pgducklake_wrapper_macros[] = {
    "FROM ducklake_ensure_inlined_table('" PGDUCKLAKE_DUCKDB_CATALOG "', schema_name, table_name)"},
   {DEFAULT_SCHEMA, "list_files", {"schema_name", "table_name", nullptr}, {{nullptr, nullptr}},
    "FROM ducklake_list_files('" PGDUCKLAKE_DUCKDB_CATALOG "', table_name, schema => schema_name)"},
+  // Register existing Parquet files (a path/glob or a list of them) in the table's catalog without
+  // copying them; the files stay where they are and are not owned by the table's data path.
+  {DEFAULT_SCHEMA, "add_data_files", {"schema_name", "table_name", "files", nullptr}, {{nullptr, nullptr}},
+   "FROM ducklake_add_data_files('" PGDUCKLAKE_DUCKDB_CATALOG "', table_name, files, schema => schema_name)"},
   // data change feed function with concrete rowid/snapshot_id output columns
   {DEFAULT_SCHEMA, "table_changes",
    {"schema_name", "table_name", "start_snapshot", "end_snapshot", nullptr},

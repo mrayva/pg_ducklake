@@ -105,7 +105,7 @@ Last updated: 2026-06-16
 
 - [x] `ducklake_list_files()`: `ducklake.list_files()`
 - [x] `ducklake_table_info()`: `ducklake.table_info()`
-- [ ] `ducklake_add_data_files()`: Register external Parquet files
+- [x] `ducklake_add_data_files()`: `ducklake.add_data_files()`
 - [x] Metadata tables (queryable): All `ducklake_*` tables in `ducklake` schema
 
 ## Migration
