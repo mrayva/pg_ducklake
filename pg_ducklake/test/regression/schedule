@@ -12,6 +12,7 @@ test: transaction
 test: non_ducklake_commit
 test: temp_table
 test: force_execution_mixed_join
+test: insert_select_duckdb_row
 test: insert_unnest
 test: insert_values
 test: insert_values_stable
